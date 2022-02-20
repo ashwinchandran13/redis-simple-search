@@ -16,7 +16,7 @@ let schema = new Schema(
         make: { type: 'string' },
         model: { type: 'string' },
         image: { type: 'string' },
-        description: { type: 'string' },
+        description: { type: 'string', textSearch: true },
     },
     {
         dataStructure: 'JSON'
@@ -32,4 +32,25 @@ export async function createCar(data: EntityCreationData) {
 
     const id = await repository.save(car);
 
+}
+
+export async function createIndex() {
+    await connect();
+
+    const repository = new Repository(schema, client);
+    await repository.createIndex();
+}
+
+export async function searchCars(query: any) {
+    await connect();
+
+    const repository = new Repository(schema, client);
+
+    let cars = await repository.search()
+            .where('make').eq(query)
+            .or('model').eq(query)
+            .or('description').matches(query)
+            .return.all();
+
+    return cars;
 }
